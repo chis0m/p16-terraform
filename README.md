@@ -39,6 +39,8 @@ variable "region" {
 region = "eu-central-1"
 ```
 
+### Tag pattern
+<Project>-<Worspace><ResourceTitle><Resource>
 
 #### Terraform Workspaces
 - create two workspaces, dev and prod with the command `terraform workspace new dev`
@@ -47,4 +49,21 @@ region = "eu-central-1"
 - Switch workspace `terraform workspace select prod`
 
 ### Terrafrom CICD
-- Let the tflint version on your local match what you have in cicd
+Note: Let the tflint version on your local match what you have in cicd
+The CICD was implemented with:
+- terraform linter (tflint)
+- 2 terrafrom workspaces (dev, prod)
+- 2 env variables (dev, prod)
+- 3 branches (develop, master, delete-develop)
+- 5 github action workflows
+- Whenever a pull request(PR) is opened against any of the branches, tflint, terrafrom validate and plan is run. 
+The aim is to make sure the script is valid and, the changes to be made to the infrastructure is seen.
+- When the PR is merged to `develop` branch, the infrastructure is deployed to a dev environment in a different region.
+- When the PR is merged into `master`, it is deployed to production environment
+- When the PR is merged into `delete-develop`, the infrastructure in the dev environment is destroyed. This branch was created to manage cost.
+- When deploying to `production` and `delete-develop`, a manual approval is required to complete the deployment. This is achieved through `github environment rules setting`.
+
+
+  
+  
+
