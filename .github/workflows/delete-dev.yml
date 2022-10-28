@@ -1,0 +1,103 @@
+name: Delete Dev Infra
+on:
+  pull_request:
+    types: [ closed ]
+    branches: [ delete-develop ]
+env:
+  workspace: dev
+  profile: devops.chisom
+  region: us-west-2
+jobs:
+  plan:
+    name: Plan
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.region }}
+
+      - name: Add profile credentials to ~/.aws/credentials
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }} --profile ${{ env.profile }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }} --profile ${{ env.profile }}
+          aws configure set region ${{ env.region }} --profile ${{ env.profile }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform Init
+        id: init
+        run: terraform init
+        continue-on-error: false
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate
+        continue-on-error: false
+
+      - name: Terraform Create New Workspace
+        id: new-workspace
+        run: terraform workspace new ${{ env.workspace }}
+        continue-on-error: true
+
+      - name: Terraform Select Workspace
+        id: select-workspace
+        run: terraform workspace select ${{ env.workspace }}
+        continue-on-error: true
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -var-file=env/dev.tfvars
+        continue-on-error: false
+
+
+  destroy:
+    name: Destroy
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+
+      - name: Add profile credentials to ~/.aws/credentials
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }} --profile ${{ env.profile }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }} --profile ${{ env.profile }}
+          aws configure set region ${{ env.region }} --profile ${{ env.profile }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform Init
+        id: init
+        run: terraform init
+        continue-on-error: false
+
+      - name: Terraform Create New Workspace
+        id: new-workspace
+        run: terraform workspace new ${{ env.workspace }}
+        continue-on-error: true
+
+      - name: Terraform Select Workspace
+        id: select-workspace
+        run: terraform workspace select ${{ env.workspace }}
+        continue-on-error: true
+
+      - name: Terraform Destroy
+        id: Destroy
+        run: terraform destroy -var-file=env/${{ env.workspace }}.tfvars -auto-approve
+        continue-on-error: false
