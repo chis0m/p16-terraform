@@ -30,4 +30,4 @@ jobs:
           terraform init
           terraform workspace new ${{ env.workspace }}
           terraform workspace select ${{ env.workspace }}
-          terraform apply -var-file="env/{{ env.workspace }}.tfvars" -auto-approve
+          terraform apply -var-file=env/${{ env.workspace }}.tfvars -auto-approve
