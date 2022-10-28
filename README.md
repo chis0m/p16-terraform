@@ -56,6 +56,7 @@ The CICD was implemented with:
 - 2 env variables (dev, prod)
 - 3 branches (develop, master, delete-develop)
 - 5 github action workflows
+- Setup Github branch protection rules (for the three branches)  
 - Whenever a pull request(PR) is opened against any of the branches, tflint, terrafrom validate and plan is run. 
 The aim is to make sure the script is valid and, the changes to be made to the infrastructure is seen.
 - When the PR is merged to `develop` branch, the infrastructure is deployed to a dev environment in a different region.
