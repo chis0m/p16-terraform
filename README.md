@@ -48,6 +48,11 @@ region = "eu-central-1"
 - Show the exact workspace `terraform workspace show`
 - Switch workspace `terraform workspace select prod`
 
+#### Directory vs Workspaces Organization
+To separate environments with potential configuration differences, use a directory structure.
+Use workspaces for environments that do not greatly deviate from one another, to avoid duplicating your configurations.
+
+
 ### Terrafrom CICD
 Note: Let the tflint version on your local match what you have in cicd
 The CICD was implemented with:
