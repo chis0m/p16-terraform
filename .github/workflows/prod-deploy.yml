@@ -1,8 +1,9 @@
 name: Deploy Production Infra
 on:
-  pull_request:
-    types: [ closed ]
-    branches: [ master ]
+  workflow_dispatch
+#  pull_request:
+#    types: [ closed ]
+#    branches: [ master ]
 jobs:
   deploy:
     name: Deploy
