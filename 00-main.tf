@@ -96,3 +96,16 @@ module "EFS" {
   database_private_subnet_2_id = module.VPC.database_private_subnet_2_id
   database_sg_id               = module.SecurityGroups.database_server_sg_id
 }
+
+module "Compute" {
+  source = "./modules/Compute"
+
+  tags               = local.tags
+  workspace          = terraform.workspace
+  project            = local.project
+  keypair            = var.keypair
+  redhat_ami         = var.redhat-ami
+  ubuntu_ami         = var.ubuntu-ami
+  public_subnet_1_id = module.VPC.public_subnet_1_id
+  compute_sg_id      = module.SecurityGroups.external_alb_sg_id
+}
