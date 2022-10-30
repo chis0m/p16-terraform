@@ -31,21 +31,21 @@ resource "aws_efs_file_system" "mc-efs" {
   encrypted  = true
   kms_key_id = aws_kms_key.mc-kms.arn
 
-  tags = merge({ "Name" : "MC-${local.workspace}-EFS" }, local.tags)
+  tags = merge({ "Name" : "${var.project}-${var.workspace}-EFS" }, var.tags)
 }
 
 # set first mount target for the EFS
 resource "aws_efs_mount_target" "subnet-1" {
   file_system_id  = aws_efs_file_system.mc-efs.id
-  subnet_id       = aws_subnet.database-private[0].id
-  security_groups = [aws_security_group.datalayer-sg.id]
+  subnet_id       = var.database_private_subnet_1_id
+  security_groups = [var.database_sg_id]
 }
 
 # set second mount target for the EFS
 resource "aws_efs_mount_target" "subnet-2" {
   file_system_id  = aws_efs_file_system.mc-efs.id
-  subnet_id       = aws_subnet.database-private[1].id
-  security_groups = [aws_security_group.datalayer-sg.id]
+  subnet_id       = var.database_private_subnet_2_id
+  security_groups = [var.database_sg_id]
 }
 
 # create access point for wordpress

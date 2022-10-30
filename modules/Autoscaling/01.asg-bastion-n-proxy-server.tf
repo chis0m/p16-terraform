@@ -1,3 +1,8 @@
+# Get list of availability zones
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 #### creating sns topic for all the auto scaling groups
 resource "aws_sns_topic" "mc-sns" {
   name = "Default_CloudWatch_Alarms_Topic"
@@ -28,10 +33,10 @@ resource "random_shuffle" "az_list" {
 resource "aws_launch_template" "bastion-lt" {
   image_id               = var.ubuntu-ami
   instance_type          = "t2.micro"
-  vpc_security_group_ids = [aws_security_group.bastion-sg.id]
+  vpc_security_group_ids = [var.bastion_sg_id]
 
   iam_instance_profile {
-    name = aws_iam_instance_profile.ip.id
+    name = var.instance_profile_id
   }
 
   key_name = var.keypair
@@ -47,7 +52,7 @@ resource "aws_launch_template" "bastion-lt" {
   tag_specifications {
     resource_type = "instance"
 
-    tags = merge({ "Name" : "MC-${local.workspace}-Bastion-LaunchTemplate" }, local.tags)
+    tags = merge({ "Name" : "${var.project}-${var.workspace}-Bastion-LaunchTemplate" }, var.tags)
   }
 
   user_data = filebase64("${path.module}/bin/bastion.sh")
@@ -64,8 +69,8 @@ resource "aws_autoscaling_group" "bastion-asg" {
   desired_capacity          = 1
 
   vpc_zone_identifier = [
-    aws_subnet.public[0].id,
-    aws_subnet.public[1].id
+    var.public_subnet_1_id,
+    var.public_subnet_2_id
   ]
 
   launch_template {
@@ -74,7 +79,7 @@ resource "aws_autoscaling_group" "bastion-asg" {
   }
   tag {
     key                 = "Name"
-    value               = "MC-${local.workspace}-Bastion-ASG"
+    value               = "${var.project}-${var.workspace}-Bastion-ASG"
     propagate_at_launch = true
   }
 
@@ -85,10 +90,10 @@ resource "aws_autoscaling_group" "bastion-asg" {
 resource "aws_launch_template" "proxy-server-lt" {
   image_id               = var.redhat-ami
   instance_type          = "t2.micro"
-  vpc_security_group_ids = [aws_security_group.proxy-server-sg.id]
+  vpc_security_group_ids = [var.proxy_server_sg_id]
 
   iam_instance_profile {
-    name = aws_iam_instance_profile.ip.id
+    name = var.instance_profile_id
   }
 
   key_name = var.keypair
@@ -104,7 +109,7 @@ resource "aws_launch_template" "proxy-server-lt" {
   tag_specifications {
     resource_type = "instance"
 
-    tags = merge({ "Name" : "MC-${local.workspace}-ProxyServer-LaunchTemplate" }, local.tags)
+    tags = merge({ "Name" : "${var.project}-${var.workspace}-ProxyServer-LaunchTemplate" }, var.tags)
   }
 
   user_data = filebase64("${path.module}/bin/nginx.sh")
@@ -121,8 +126,8 @@ resource "aws_autoscaling_group" "proxy-server-asg" {
   desired_capacity          = 1
 
   vpc_zone_identifier = [
-    aws_subnet.proxy-server-private[0].id,
-    aws_subnet.proxy-server-private[1].id
+    var.proxy_server_private_subnet_1_id,
+    var.proxy_server_private_subnet_2_id
   ]
 
   launch_template {
@@ -132,7 +137,7 @@ resource "aws_autoscaling_group" "proxy-server-asg" {
 
   tag {
     key                 = "Name"
-    value               = "MC-${local.workspace}-ProxyServer-ASG"
+    value               = "${var.project}-${var.workspace}-ProxyServer-ASG"
     propagate_at_launch = true
   }
 
@@ -141,5 +146,5 @@ resource "aws_autoscaling_group" "proxy-server-asg" {
 # attaching autoscaling group of proxy server to external load balancer
 resource "aws_autoscaling_attachment" "asg-attachment-proxy-server" {
   autoscaling_group_name = aws_autoscaling_group.proxy-server-asg.id
-  lb_target_group_arn    = aws_lb_target_group.proxy-server-tg.arn
+  lb_target_group_arn    = var.proxy_server_tg_arn
 }
