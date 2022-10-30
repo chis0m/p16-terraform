@@ -1,16 +1,16 @@
 resource "aws_lb" "ext-alb" {
-  name     = "MC-${local.workspace}-ExternalALB"
+  name     = "${var.project}-${var.workspace}-ExternalALB"
   internal = false
   security_groups = [
-    aws_security_group.ext-alb-sg.id,
+    var.external_alb_sg_id,
   ]
 
   subnets = [
-    aws_subnet.public[0].id,
-    aws_subnet.public[1].id
+    var.public_subnet_1_id,
+    var.public_subnet_2_id
   ]
 
-  tags = merge({ "Name" : "MC-${local.workspace}-ExternalALB" }, local.tags)
+  tags = merge({ "Name" : "${var.project}-${var.workspace}-ExternalALB" }, var.tags)
 
   ip_address_type    = "ipv4"
   load_balancer_type = "application"
@@ -28,11 +28,11 @@ resource "aws_lb_target_group" "proxy-server-tg" {
     healthy_threshold   = 5
     unhealthy_threshold = 2
   }
-  name        = "MC-${local.workspace}-ProxyServer-TG"
+  name        = "${var.project}-${var.workspace}-ProxyServer-TG"
   port        = 443
   protocol    = "HTTPS"
   target_type = "instance"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = var.vpc_id
 }
 
 # Creates ALB Listener to point to the proxy server target group
@@ -49,10 +49,6 @@ resource "aws_lb_listener" "proxy-server-listener" {
 }
 
 ####********************************************************#####
-
-output "alb_dns_name" {
-  value = aws_lb.ext-alb.dns_name
-}
 
 output "alb_target_group_arn" {
   value = aws_lb_target_group.proxy-server-tg.arn

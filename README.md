@@ -87,26 +87,44 @@ Use Cases
 Implementation
 - Create an IAM user
 - Create the role R1 which the iam user will assume
-    - Edit the Trust Relationship and add the arn of the iam user that will assume the role
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": "iam:ListRoles",
+        "Resource": "*"
+      }
+    ]
+}
+```    
+- Edit the Trust Relationship on the R1 role to add the arn of the iam user that will assume the role
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "principal": {
+        "AWS": "arn of the iam user",
+        "Service": "ec2.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+```  
+- Create an inline policy STS which will enable the user to assume the role R1
 ```json
 {
     "Version": "2012-10-17",
     "Statement": [
         {
-            "Effect": "Allow",
-            "Action": "sts:AssumeRole",
-            "Principal": {
-              "AWS": "arn of the iam user"
-            }
-        }
-    ]
-}
-```  
-- Create a policy STS which will enable the user to assume the role R1
-```json
-{
-    "Version": "2012-10-17",
-    "Statement": [
+          "Effect": "Allow",
+          "Action": "lambda:ListFunctions",
+          "Resource": "*"
+        },
         {
             "Effect": "Allow",
             "Action": "sts:AssumeRole",
@@ -115,7 +133,7 @@ Implementation
     ]
 }
 ```  
-- 
+Note: So we have a two-way permission. The role R1 has to trust the user to assume the role and the user has to be given ability to assume the role
 - The user will call the assume role api to assume the role. This api will give secret-key, access-key id and session-token
   
   

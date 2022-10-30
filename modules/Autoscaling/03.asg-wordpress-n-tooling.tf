@@ -3,10 +3,10 @@
 resource "aws_launch_template" "wordpress-app-lt" {
   image_id               = var.redhat-ami
   instance_type          = "t2.micro"
-  vpc_security_group_ids = [aws_security_group.webserver-sg.id]
+  vpc_security_group_ids = [var.web_server_sg_id]
 
   iam_instance_profile {
-    name = aws_iam_instance_profile.ip.id
+    name = var.instance_profile_id
   }
 
   key_name = var.keypair
@@ -22,7 +22,7 @@ resource "aws_launch_template" "wordpress-app-lt" {
   tag_specifications {
     resource_type = "instance"
 
-    tags = merge({ "Name" : "MC-${local.workspace}-Wordpress-LaunchTemplate" }, local.tags)
+    tags = merge({ "Name" : "${var.project}-${var.workspace}-Wordpress-LaunchTemplate" }, var.tags)
 
   }
 
@@ -39,9 +39,8 @@ resource "aws_autoscaling_group" "wordpress-asg" {
   health_check_type         = "ELB"
   desired_capacity          = 1
   vpc_zone_identifier = [
-
-    aws_subnet.web-server-private[0].id,
-    aws_subnet.web-server-private[1].id
+    var.web_private_subnet_1_id,
+    var.web_private_subnet_2_id
   ]
 
   launch_template {
@@ -58,17 +57,17 @@ resource "aws_autoscaling_group" "wordpress-asg" {
 # attaching autoscaling group of wordpress application to internal load balancer
 resource "aws_autoscaling_attachment" "asg_attachment_wordpress" {
   autoscaling_group_name = aws_autoscaling_group.wordpress-asg.id
-  lb_target_group_arn    = aws_lb_target_group.wordpress-tg.arn
+  lb_target_group_arn    = var.wordpress_tg_arn
 }
 
 # launch template for tooling
 resource "aws_launch_template" "tooling-app-lt" {
   image_id               = var.redhat-ami
   instance_type          = "t2.micro"
-  vpc_security_group_ids = [aws_security_group.webserver-sg.id]
+  vpc_security_group_ids = [var.web_server_sg_id]
 
   iam_instance_profile {
-    name = aws_iam_instance_profile.ip.id
+    name = var.instance_profile_id
   }
 
   key_name = var.keypair
@@ -84,7 +83,7 @@ resource "aws_launch_template" "tooling-app-lt" {
   tag_specifications {
     resource_type = "instance"
 
-    tags = merge({ "Name" : "MC-${local.workspace}-ToolingApp-LaunchTemplate" }, local.tags)
+    tags = merge({ "Name" : "${var.project}-${var.workspace}-ToolingApp-LaunchTemplate" }, var.tags)
   }
 
   user_data = filebase64("${path.module}/bin/tooling.sh")
@@ -102,8 +101,8 @@ resource "aws_autoscaling_group" "tooling-asg" {
 
   vpc_zone_identifier = [
 
-    aws_subnet.web-server-private[0].id,
-    aws_subnet.web-server-private[1].id
+    var.web_private_subnet_1_id,
+    var.web_private_subnet_2_id
   ]
 
   launch_template {
@@ -113,7 +112,7 @@ resource "aws_autoscaling_group" "tooling-asg" {
 
   tag {
     key                 = "Name"
-    value               = "MC-${local.workspace}-ToolingApp-LT"
+    value               = "${var.project}-${var.workspace}-ToolingApp-LT"
     propagate_at_launch = true
   }
 }
@@ -121,5 +120,5 @@ resource "aws_autoscaling_group" "tooling-asg" {
 # attaching autoscaling group of  tooling application to internal load balancer
 resource "aws_autoscaling_attachment" "asg_attachment_tooling" {
   autoscaling_group_name = aws_autoscaling_group.tooling-asg.id
-  lb_target_group_arn    = aws_lb_target_group.tooling-tg.arn
+  lb_target_group_arn    = var.tooling_tg_arn
 }

@@ -1,7 +1,7 @@
 # security group for alb, to allow acess from any where for HTTP and HTTPS traffic
 resource "aws_security_group" "ext-alb-sg" {
-  name        = "MC-${local.workspace}-ExternalALB-SG"
-  vpc_id      = aws_vpc.main.id
+  name        = "${var.project}-${var.workspace}-ExternalALB-SG"
+  vpc_id      = var.vpc_id
   description = "Allow TLS inbound traffic"
 
   ingress {
@@ -26,15 +26,15 @@ resource "aws_security_group" "ext-alb-sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  tags = merge({ "Name" : "MC-${local.workspace}-ExternalALB-SG" }, local.tags)
+  tags = merge({ "Name" : "${var.project}-${var.workspace}-ExternalALB-SG" }, var.tags)
 }
 
 ####********************************************************#####
 
 # security group for bastion, to allow access into the bastion host from you IP
 resource "aws_security_group" "bastion-sg" {
-  name        = "MC-${local.workspace}-Bastion-SG"
-  vpc_id      = aws_vpc.main.id
+  name        = "${var.project}-${var.workspace}-Bastion-SG"
+  vpc_id      = var.vpc_id
   description = "Allow incoming SSH connections."
 
   ingress {
@@ -51,15 +51,15 @@ resource "aws_security_group" "bastion-sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  tags = merge({ "Name" : "MC-${local.workspace}-Bastion-SG" }, local.tags)
+  tags = merge({ "Name" : "${var.project}-${var.workspace}-Bastion-SG" }, var.tags)
 }
 
 ####********************************************************#####
 
 # security group for proxy server, to allow access only from the external load balancer and bastion instance
 resource "aws_security_group" "proxy-server-sg" {
-  name   = "MC-${local.workspace}-ProxyServer-SG"
-  vpc_id = aws_vpc.main.id
+  name   = "${var.project}-${var.workspace}-ProxyServer-SG"
+  vpc_id = var.vpc_id
 
   egress {
     from_port   = 0
@@ -67,7 +67,7 @@ resource "aws_security_group" "proxy-server-sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  tags = merge({ "Name" : "MC-${local.workspace}-ProxyServer-SG" }, local.tags)
+  tags = merge({ "Name" : "${var.project}-${var.workspace}-ProxyServer-SG" }, var.tags)
 }
 
 resource "aws_security_group_rule" "inbound-proxy-server-http" {
@@ -101,8 +101,8 @@ resource "aws_security_group_rule" "inbound-bastion-ssh" {
 
 # security group for internal alb, to have access only from nginx reverse proxy server
 resource "aws_security_group" "int-alb-sg" {
-  name   = "MC-${local.workspace}-InternalALB-SG"
-  vpc_id = aws_vpc.main.id
+  name   = "${var.project}-${var.workspace}-InternalALB-SG"
+  vpc_id = var.vpc_id
 
   egress {
     from_port   = 0
@@ -110,7 +110,7 @@ resource "aws_security_group" "int-alb-sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  tags = merge({ "Name" : "MC-${local.workspace}-InternalALB-SG" }, local.tags)
+  tags = merge({ "Name" : "${var.project}-${var.workspace}-InternalALB-SG" }, var.tags)
 }
 
 resource "aws_security_group_rule" "inbound-internal-alb-http" {
@@ -135,8 +135,8 @@ resource "aws_security_group_rule" "inbound-internal-alb-https" {
 
 # security group for webservers, to have access only from the internal load balancer and bastion instance
 resource "aws_security_group" "webserver-sg" {
-  name   = "MC-${local.workspace}-Webserver-SG"
-  vpc_id = aws_vpc.main.id
+  name   = "${var.project}-${var.workspace}-Webserver-SG"
+  vpc_id = var.vpc_id
 
   egress {
     from_port   = 0
@@ -145,7 +145,7 @@ resource "aws_security_group" "webserver-sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = merge({ "Name" : "MC-${local.workspace}-WebServer-SG" }, local.tags)
+  tags = merge({ "Name" : "${var.project}-${var.workspace}-WebServer-SG" }, var.tags)
 }
 
 resource "aws_security_group_rule" "inbound-webserver-http" {
@@ -180,7 +180,7 @@ resource "aws_security_group_rule" "inbound-web-ssh" {
 # security group for datalayer to allow traffic from webserver on nfs and mysql port and bastion host on mysql port
 resource "aws_security_group" "datalayer-sg" {
   name   = "datalayer-sg"
-  vpc_id = aws_vpc.main.id
+  vpc_id = var.vpc_id
 
   egress {
     from_port   = 0
@@ -189,7 +189,7 @@ resource "aws_security_group" "datalayer-sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = merge({ "Name" : "MC-${local.workspace}-Database-SG" }, local.tags)
+  tags = merge({ "Name" : "${var.project}-${var.workspace}-Database-SG" }, var.tags)
 }
 
 resource "aws_security_group_rule" "inbound-nfs-port" {

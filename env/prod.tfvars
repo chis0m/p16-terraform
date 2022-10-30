@@ -6,7 +6,7 @@ enable_dns_support = "true"
 
 enable_dns_hostnames = "true"
 
-preferred_number_of_public_subnets = 2
+preferred_number_of_subnets = 2
 
 ubuntu-ami = "ami-08c40ec9ead489470"
 
