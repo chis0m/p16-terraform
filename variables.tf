@@ -1,29 +1,23 @@
 variable "region" {
   type        = string
-  default     = "us-east-1"
   description = "The Region were resources are to be hosted"
 }
 
 variable "vpc_cidr" {
   type        = string
-  default     = "10.0.0.0/16"
   description = "VPC CIDR block"
 }
 
 variable "enable_dns_support" {
-  type    = bool
-  default = "true"
-
+  type = bool
 }
 
 variable "enable_dns_hostnames" {
-  type    = bool
-  default = "true"
+  type = bool
 }
 
-variable "preferred_number_of_public_subnets" {
+variable "preferred_number_of_subnets" {
   type        = number
-  default     = 2
   description = "Number of private subnets"
 }
 variable "ubuntu-ami" {

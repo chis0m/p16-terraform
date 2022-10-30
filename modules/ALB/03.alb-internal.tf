@@ -3,18 +3,18 @@
 #---------------------------------
 
 resource "aws_lb" "internal-alb" {
-  name     = "MC-${local.workspace}-Internal-ALB"
+  name     = "${var.project}-${var.workspace}-Internal-ALB"
   internal = true
   security_groups = [
-    aws_security_group.int-alb-sg.id,
+    var.internal_alb_sg_id,
   ]
 
   subnets = [
-    aws_subnet.web-server-private[0].id,
-    aws_subnet.web-server-private[1].id
+    var.web_private_subnet_1_id,
+    var.web_private_subnet_2_id
   ]
 
-  tags = merge({ "Name" : "MC-${local.workspace}-InternalALB" }, local.tags)
+  tags = merge({ "Name" : "${var.project}-${var.workspace}-InternalALB" }, var.tags)
 
   ip_address_type    = "ipv4"
   load_balancer_type = "application"
@@ -32,11 +32,11 @@ resource "aws_lb_target_group" "wordpress-tg" {
     unhealthy_threshold = 2
   }
 
-  name        = "MC-${local.workspace}-WordpressApp-TG"
+  name        = "${var.project}-${var.workspace}-WordpressApp-TG"
   port        = 443
   protocol    = "HTTPS"
   target_type = "instance"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = var.vpc_id
 }
 
 # --- target group for tooling -------
@@ -51,11 +51,11 @@ resource "aws_lb_target_group" "tooling-tg" {
     unhealthy_threshold = 2
   }
 
-  name        = "MC-${local.workspace}-ToolingApp-TG"
+  name        = "${var.project}-${var.workspace}-ToolingApp-TG"
   port        = 443
   protocol    = "HTTPS"
   target_type = "instance"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = var.vpc_id
 }
 
 ####********************************************************#####
